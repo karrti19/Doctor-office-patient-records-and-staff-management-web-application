@@ -1,46 +1,45 @@
-# CarePoint — Patient Records & Staff Management
+# CarePoint — Spring Boot + MySQL
 
-This repository now contains the original browser-only UI prototype and an early Java/Spring Boot + MySQL backend scaffold under **backend/**.
+The backend lives in this directory and now includes a same-origin development interface in src/main/resources/static. The original root-level index.html/app.js remains a separate browser-only prototype.
 
-## Backend foundations added
-- Java 21, Maven, Spring Boot, Spring Security, Spring Data JPA, MySQL Connector and Flyway.
-- Session-based form login, BCrypt password hashing, session fixation protection, HTTP-only session cookie and Spring Security CSRF protection.
-- Roles: ADMIN, DOCTOR and RECEPTIONIST.
-- Administrator-only staff listing, staff creation and deactivation endpoints. Staff passwords are submitted as temporary passwords and stored as BCrypt hashes; only an administrator can create ordinary staff accounts.
-- Patient demographic and clinical endpoints. Receptionist read responses omit clinical notes and prescription notes; only doctors and administrators can read or update clinical fields.
-- Flyway migration for the initial tables.
+## Implemented scaffold
+- Java 21 / Maven / Spring Boot 3.5.x, Spring Security, Spring Data JPA, MySQL Connector and Flyway.
+- Session-based login, BCrypt password hashes, session-fixation protection, HTTP-only session cookie and CSRF cookie/header flow for same-origin browser requests.
+- ADMIN, DOCTOR and RECEPTIONIST roles.
+- Administrator-only endpoints to list, create and deactivate ordinary staff accounts. New staff passwords are hashed; administrator accounts cannot be created through the ordinary staff endpoint.
+- Patient directory, patient registration and demographic updates for authenticated staff. Receptionist read views omit clinical notes and prescription notes. Clinical note/prescription reads and writes are limited to doctors and administrators.
+- Flyway migration for the initial MySQL tables.
+- Same-origin browser UI at / with patient search/registration and administrator staff management. The browser UI and API are served by the same Spring Boot service.
 
-## Important status: development scaffold, not production-ready
-**Use fictional records only. Do not use this with real patient information.** The code has not been built or tested in this environment and must be reviewed and tested locally before deployment. The old root-level index.html and app.js remain the browser-only demo and are not yet connected to the backend API. A complete integrated user interface is still needed.
+## Critical safety status
+**Development scaffold only. Fictional test records only. Do not use real patient information.** The code has not been compiled, deployed or security-tested in this environment. Run the build and tests locally, inspect the code and complete the requirements below before any production use.
 
-Missing production requirements include a tested append-only audit trail for every view/change, MFA, password reset and forced password change, login rate limiting and lockout, stronger session lifecycle controls, field-level data protection, a documented backup/restore drill, monitoring/alerting, security testing, privacy/legal review, and clinical workflow validation. Do not represent this scaffold as compliant or production-ready.
+Not yet implemented/verified: append-only audit events for every record view and change, MFA, forced first-login password change, secure password recovery, rate limiting/lockout, more complete session lifecycle controls, field-level encryption/data protection, backup/restore drills, monitoring/alerting, independent penetration/security testing, clinical workflow validation, and privacy/legal review. The staff form currently issues a temporary password but does not yet force a change on first login. Do not represent this software as compliant or production-ready.
 
-## Local backend setup
-1. Install JDK 21 and Maven; install MySQL 8.4 or another supported MySQL 8 release.
-2. Create a dedicated empty development database named carepoint and a least-privilege database user. Keep the database private.
-3. Set environment variables before starting the app:
+## Local development
+1. Install JDK 21, Maven and MySQL 8.4.
+2. Create an empty development database named carepoint and a dedicated least-privilege database user.
+3. Set environment variables:
    - DB_URL=jdbc:mysql://localhost:3306/carepoint?useSSL=true&serverTimezone=UTC
    - DB_USERNAME=your development database username
    - DB_PASSWORD=your development database password
    - INITIAL_ADMIN_USERNAME=your chosen administrator username
-   - INITIAL_ADMIN_PASSWORD=a unique password with at least 20 characters
-   - COOKIE_SECURE=false for local HTTP development only
-4. From the backend directory, run: mvn spring-boot:run
-5. Visit http://localhost:8080/login. The initial administrator is created only when both initial-admin variables are supplied and the username does not already exist. Never commit these values or a .env file.
+   - INITIAL_ADMIN_PASSWORD=a unique password of at least 20 characters
+   - COOKIE_SECURE=false (local HTTP development only)
+4. From this directory run mvn spring-boot:run.
+5. Visit http://localhost:8080/login. The first administrator is created only if both initial-admin variables are supplied and the username does not already exist. Never commit these secrets or a .env file.
 
-Flyway creates the initial tables when the application starts. JPA uses schema validation rather than automatically modifying tables.
+Flyway creates the initial tables. Hibernate is configured to validate rather than automatically alter the schema.
 
-## One-platform hosting plan
-Railway can host the Spring Boot web service and a private MySQL service in one project. Configure the service's root directory as backend (or use the supplied Maven project path in the build configuration), add a MySQL database service, and set the backend environment variables using private/reference variables from that database service. Set COOKIE_SECURE=true for HTTPS deployment. Keep the database off public networking. Enable and test backups before any real data is considered.
-
-The same Spring Boot service should ultimately serve the integrated frontend from its classpath static resources so login, UI and API share one origin. The existing root prototype is not yet bundled into that service; do not treat the prototype as the deployed secured UI.
+## Single-platform deployment plan
+Railway can host this Spring Boot web service and a private MySQL service within one project. Create a Railway project, deploy this repository from GitHub with the service root directory set to backend, add a MySQL database service, and set DB_URL, DB_USERNAME and DB_PASSWORD as private/reference variables based on that database service. Set INITIAL_ADMIN_USERNAME and INITIAL_ADMIN_PASSWORD as deployment secrets before the first start. Set COOKIE_SECURE=true behind HTTPS. Keep MySQL private and enable/test backups. Review the current Railway instructions before deploying.
 
 ## API outline
 - GET /api/admin/staff — administrator only.
-- POST /api/admin/staff — administrator creates a DOCTOR or RECEPTIONIST account; temporary password must be at least 14 characters.
+- POST /api/admin/staff — administrator creates DOCTOR or RECEPTIONIST accounts; temporary password must be at least 14 characters.
 - POST /api/admin/staff/{id}/deactivate — administrator deactivates a non-admin account.
 - GET /api/patients and GET /api/patients/{id} — authenticated staff; receptionists receive demographics only.
 - POST /api/patients and PUT /api/patients/{id}/demographics — authenticated staff.
 - PUT /api/patients/{id}/clinical — doctor or administrator only.
 
-For write requests made by a browser, retain and submit the Spring Security CSRF token. Do not disable CSRF as a shortcut. Add automated tests for each role before relying on these endpoints.
+Spring Security CSRF protection remains enabled. Add and run automated tests for every role and API action before relying on this scaffold.
