@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 @Configuration @EnableMethodSecurity
 public class SecurityConfig {
  @Bean PasswordEncoder passwordEncoder(){return new BCryptPasswordEncoder(12);}
@@ -18,16 +20,16 @@ public class SecurityConfig {
   provider.setPasswordEncoder(encoder);return provider;
  }
  @Bean SecurityFilterChain securityFilterChain(HttpSecurity http,DaoAuthenticationProvider provider)throws Exception{
-  http.authenticationProvider(provider).authorizeHttpRequests(auth->auth
-   .requestMatchers("/login","/error","/actuator/health","/css/**","/js/**").permitAll()
-   .requestMatchers("/api/admin/**").hasRole("ADMIN")
-   .requestMatchers(HttpMethod.GET,"/api/patients/**").hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
-   .requestMatchers("/api/patients/**").hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
-   .anyRequest().authenticated())
+  http.authenticationProvider(provider)
+   .csrf(csrf->csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
+   .authorizeHttpRequests(auth->auth.requestMatchers("/login","/error","/actuator/health","/css/**","/js/**","/api/csrf").permitAll()
+    .requestMatchers("/api/admin/**").hasRole("ADMIN")
+    .requestMatchers(HttpMethod.GET,"/api/patients/**").hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
+    .requestMatchers("/api/patients/**").hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
+    .anyRequest().authenticated())
    .formLogin(form->form.defaultSuccessUrl("/",true))
    .logout(logout->logout.logoutSuccessUrl("/login?logout").invalidateHttpSession(true).deleteCookies("JSESSIONID"))
    .sessionManagement(session->session.sessionFixation(fix->fix.migrateSession()));
-  // Keep Spring Security CSRF protection enabled for session-based browser requests.
   return http.build();
  }
 }
