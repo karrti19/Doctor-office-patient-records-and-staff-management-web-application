@@ -1,37 +1,17 @@
 # CarePoint — Patient Records & Staff Management
 
-A starter frontend prototype for a doctor's office. It is intended for learning and interface testing with **fictional sample records only**.
+This repository contains two development paths:
 
-## Current prototype features
+- **backend/** — Java 21, Spring Boot, Spring Security, Flyway and MySQL scaffold, with a same-origin web interface served by Spring Boot.
+- Root-level index.html, styles.css and app.js — original browser-only visual prototype; patient data is stored in localStorage and is not protected.
 
-- Clinic overview and patient directory
-- Search by patient name or demo ID
-- Demo patient detail view
-- Add fictional patient records with date of birth, address, visit notes, and prescription notes
-- Staff role-planning page for doctor and receptionist workflows
-- Responsive layout for desktop and mobile
+## Run the visual prototype
+Open the root index.html in a browser. Use fictional sample records only. Data stays in that browser and does not sync.
 
-## Run locally
+## Run the Spring Boot + MySQL application
+Read [backend/README.md](backend/README.md) for prerequisites, environment variables, local startup, API outline and the one-platform Railway deployment plan. The backend's web interface is under backend/src/main/resources/static and is separate from the root prototype.
 
-1. Download or clone this repository.
-2. Open `index.html` in a modern browser.
-3. Use the sample records or add fictional records.
+## Current safety status
+**Neither version is production-ready. Use fictional records only.** The backend scaffold has not been built or security-tested in this environment. Before any real patient information is used, it needs automated role/permission tests, append-only audit trails, MFA, account recovery and first-login password change, login abuse controls, secure backup/restore procedures, security review, monitoring, privacy/legal review, and clinical workflow validation.
 
-New demo records are stored in the current browser's `localStorage`. They do not sync between devices, and they are not encrypted or protected as medical records.
-
-## GitHub Pages
-
-In the repository, open **Settings → Pages**. Under build and deployment, select **Deploy from a branch**, choose the default branch and the root folder, then save. Once GitHub finishes publishing, it will show the site URL.
-
-## Important security limitation
-
-This is **not a production medical records system**. It has no real login, server-side authorization, shared database, encrypted medical-record workflow, audit log, or backup system. The doctor and receptionist roles are a design plan only; the current frontend does not enforce permissions.
-
-**Never enter real patient data, passwords, prescriptions, or other confidential information into this prototype.** Do not deploy it for actual clinical use until a qualified developer has implemented and tested a secure backend, authentication, authorization, audit trails, backups, and applicable privacy/data-protection requirements.
-
-## Suggested next development stages
-
-1. Confirm the clinic's workflows and exactly what each staff role may view or change.
-2. Select a backend and database; keep all credentials and secrets out of frontend code and GitHub.
-3. Implement server-enforced login, role permissions, validation, and audit logging.
-4. Add testing, secure deployment, backups, recovery procedures, and a privacy review before any real data is entered.
+Never commit database credentials, administrator passwords, real patient details, prescriptions, or other confidential information to this repository. Do not publish or use real patient information through GitHub Pages or the browser-only prototype.
