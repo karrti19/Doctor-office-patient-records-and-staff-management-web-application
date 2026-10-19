@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Clinic patient records and staff management interface prototype">
+  <title>CarePoint | Patient Records</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="CarePoint home">
+        <span class="brand-mark">+</span>
+        <span><strong>CarePoint</strong><small>Clinic workspace</small></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="navigation" aria-label="Main navigation">
+        <button class="nav-item active" data-view="dashboard"><span>▦</span> Overview</button>
+        <button class="nav-item" data-view="patients"><span>♙</span> Patient records</button>
+        <button class="nav-item" data-view="staff"><span>♧</span> Staff & access</button>
+      </nav>
+      <div class="sidebar-note">
+        <span class="status-dot"></span>
+        <div><strong>Demo environment</strong><small>Fictional sample data only</small></div>
+      </div>
+      <div class="sidebar-footer">CarePoint Portal <span>Prototype v0.1</span></div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-mark">+</span><strong>CarePoint</strong></div>
+        <div class="breadcrumb">Clinic workspace <span>/</span> <strong id="breadcrumb-current">Overview</strong></div>
+        <div class="top-actions">
+          <span class="demo-pill"><span class="status-dot"></span> Demo mode</span>
+          <div class="avatar" aria-hidden="true">DC</div>
+          <div class="user-info"><strong>Demo Clinician</strong><small>Prototype account</small></div>
+        </div>
+      </header>
+
+      <section class="page-content">
+        <div class="notice"><strong>Prototype only</strong><span>Do not enter real patient information. This demo does not provide secure authentication or protected medical storage.</span></div>
+        <section id="dashboard-view" class="view">
+          <div class="page-heading">
+            <div><p class="eyebrow">YOUR CLINIC AT A GLANCE</p><h1>Overview</h1><p class="subheading">A simple workspace for managing patient information and clinic staff.</p></div>
+            <button class="primary-button" id="add-patient-top">＋ Add patient</button>
+          </div>
+          <div class="stats-grid">
+            <article class="stat-card"><div class="stat-label">Sample patients <span class="stat-icon blue">♙</span></div><div class="stat-value" id="patient-count">3</div><div class="stat-foot">Fictional demo records</div></article>
+            <article class="stat-card"><div class="stat-label">Visits recorded <span class="stat-icon violet">▤</span></div><div class="stat-value" id="visit-count">3</div><div class="stat-foot">Across sample records</div></article>
+            <article class="stat-card"><div class="stat-label">Staff roles <span class="stat-icon green">♧</span></div><div class="stat-value">2</div><div class="stat-foot">Doctor and receptionist</div></article>
+          </div>
+          <div class="section-heading"><div><h2>Recent patient records</h2><p>Fictional records for interface testing</p></div><button class="text-button" data-go="patients">View all records →</button></div>
+          <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>PATIENT</th><th>LAST VISIT</th><th>RECORD STATUS</th><th></th></tr></thead><tbody id="recent-patients"></tbody></table></div></div>
+          <div class="bottom-grid">
+            <article class="panel role-card"><div class="panel-icon blue">♧</div><h3>Staff access</h3><p>Plan different permissions for doctors and receptionists before connecting a real account system.</p><button class="text-button" data-go="staff">Review roles →</button></article>
+            <article class="panel role-card"><div class="panel-icon green">✓</div><h3>Privacy by design</h3><p>Real medical records need server-enforced permissions, secure sessions, audit history and backups.</p><span class="small-tag">Required before production</span></article>
+          </div>
+        </section>
+
+        <section id="patients-view" class="view hidden">
+          <div class="page-heading"><div><p class="eyebrow">PATIENT DIRECTORY</p><h1>Patient records</h1><p class="subheading">Search and manage fictional patient records in this local demo.</p></div><button class="primary-button" id="add-patient">＋ Add patient</button></div>
+          <div class="panel directory-panel"><div class="directory-toolbar"><label class="search-box"><span>⌕</span><input id="patient-search" type="search" placeholder="Search by name or patient ID…" aria-label="Search patient records"></label><span class="result-count" id="result-count">3 records</span></div>
+            <div class="table-wrap"><table><thead><tr><th>PATIENT</th><th>DATE OF BIRTH</th><th>LAST VISIT</th><th>RECORD STATUS</th><th></th></tr></thead><tbody id="patient-table"></tbody></table></div>
+          </div>
+          <p class="footnote">Demo data is stored only in this browser. It is not a secure or shared database.</p>
+        </section>
+
+        <section id="staff-view" class="view hidden">
+          <div class="page-heading"><div><p class="eyebrow">TEAM ADMINISTRATION</p><h1>Staff & access</h1><p class="subheading">A proposed role model for the future secured application.</p></div></div>
+          <div class="role-grid">
+            <article class="panel access-card"><div class="access-heading"><div class="panel-icon violet">✚</div><span class="role-label">CLINICAL ROLE</span></div><h2>Doctor</h2><p>Responsible for clinical care and medical documentation.</p><ul><li>View patient records</li><li>Create and update visit notes</li><li>Record diagnoses and prescriptions</li><li>Review patient history</li></ul><span class="permission-note">Permissions must be enforced by the backend.</span></article>
+            <article class="panel access-card"><div class="access-heading"><div class="panel-icon blue">▤</div><span class="role-label">FRONT DESK ROLE</span></div><h2>Receptionist</h2><p>Responsible for registration and administrative workflows.</p><ul><li>Register patients</li><li>Update contact details</li><li>Manage appointments and check-ins</li><li>View only information needed for their work</li></ul><span class="permission-note">Clinical notes and prescriptions should be restricted as appropriate.</span></article>
+          </div>
+          <div class="panel security-panel"><h3>Before adding staff login</h3><p>Use a trusted authentication service or secure backend. Do not store passwords in this website's JavaScript, browser storage, or repository. The role labels on this page are planning guidance, not functioning security.</p></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="patient-dialog" class="patient-dialog">
+    <form id="patient-form">
+      <div class="dialog-heading"><div><p class="eyebrow">DEMO RECORD</p><h2>Add a patient</h2></div><button type="button" class="close-button" id="close-dialog" aria-label="Close">×</button></div>
+      <p class="dialog-warning">Use fictional information only.</p>
+      <label>Full name<input name="name" required maxlength="100" placeholder="e.g. Jordan Sample"></label>
+      <div class="form-row"><label>Date of birth<input name="dob" type="date" required></label><label>Last visit<input name="visit" type="date"></label></div>
+      <label>Address<input name="address" maxlength="180" placeholder="Fictional address"></label>
+      <label>Visit note / illness description<textarea name="notes" rows="3" maxlength="1000" placeholder="Fictional demo note only"></textarea></label>
+      <label>Prescription note (optional)<textarea name="prescription" rows="2" maxlength="1000" placeholder="Fictional demo prescription only"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="secondary-button" id="cancel-dialog">Cancel</button><button type="submit" class="primary-button">Save demo record</button></div>
+    </form>
+  </dialog>
+  <dialog id="detail-dialog" class="patient-dialog"><div id="patient-detail"></div><div class="dialog-actions"><button type="button" class="secondary-button" id="close-detail">Close</button></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
