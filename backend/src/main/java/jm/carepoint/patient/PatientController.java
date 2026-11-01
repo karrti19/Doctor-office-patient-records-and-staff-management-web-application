@@ -1,5 +1,6 @@
 package jm.carepoint.patient;
 
+import jm.carepoint.audit.AuditService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,9 +19,11 @@ import java.util.List;
 @RequestMapping("/api/patients")
 public class PatientController {
     private final PatientRepository patients;
+    private final AuditService audit;
 
-    public PatientController(PatientRepository patients) {
+    public PatientController(PatientRepository patients, AuditService audit) {
         this.patients = patients;
+        this.audit = audit;
     }
 
     public record DemographicsRequest(
@@ -56,6 +59,7 @@ public class PatientController {
     @PreAuthorize("hasAnyRole('ADMIN','DOCTOR','RECEPTIONIST')")
     public Object list(@RequestParam(defaultValue = "") @Size(max = 100) String q) {
         List<PatientRecord> found = patients.search(q.trim());
+        audit.record("PATIENT_LIST_VIEW", "PATIENT", null);
         return canReadClinical()
                 ? found.stream().map(this::clinicalView).toList()
                 : found.stream().map(this::receptionView).toList();
@@ -65,6 +69,7 @@ public class PatientController {
     @PreAuthorize("hasAnyRole('ADMIN','DOCTOR','RECEPTIONIST')")
     public Object detail(@PathVariable Long id) {
         PatientRecord patient = get(id);
+        audit.record("PATIENT_RECORD_VIEW", "PATIENT", id);
         return canReadClinical() ? clinicalView(patient) : receptionView(patient);
     }
 
@@ -74,6 +79,7 @@ public class PatientController {
     public Object create(@Valid @RequestBody DemographicsRequest request) {
         PatientRecord saved = patients.save(new PatientRecord(
                 request.fullName(), request.dateOfBirth(), request.address(), request.phone()));
+        audit.record("PATIENT_CREATED", "PATIENT", saved.getId());
         return canReadClinical() ? clinicalView(saved) : receptionView(saved);
     }
 
@@ -83,6 +89,7 @@ public class PatientController {
         PatientRecord patient = get(id);
         patient.updateDemographics(request.fullName(), request.dateOfBirth(), request.address(), request.phone());
         patients.save(patient);
+        audit.record("PATIENT_DEMOGRAPHICS_UPDATED", "PATIENT", id);
         return canReadClinical() ? clinicalView(patient) : receptionView(patient);
     }
 
@@ -91,7 +98,9 @@ public class PatientController {
     public PatientView updateClinical(@PathVariable Long id, @Valid @RequestBody ClinicalRequest request) {
         PatientRecord patient = get(id);
         patient.updateClinical(request.clinicalNotes(), request.prescriptionNotes());
-        return clinicalView(patients.save(patient));
+        PatientRecord saved = patients.save(patient);
+        audit.record("PATIENT_CLINICAL_UPDATED", "PATIENT", id);
+        return clinicalView(saved);
     }
 
     private PatientView clinicalView(PatientRecord p) {
