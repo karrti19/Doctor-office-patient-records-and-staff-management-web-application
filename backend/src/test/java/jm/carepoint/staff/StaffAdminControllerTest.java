@@ -1,6 +1,8 @@
 package jm.carepoint.staff;
 
+import jm.carepoint.audit.AuditService;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -13,7 +15,9 @@ import static org.mockito.Mockito.*;
 class StaffAdminControllerTest {
     private final StaffRepository staff = mock(StaffRepository.class);
     private final PasswordEncoder encoder = mock(PasswordEncoder.class);
-    private final StaffAdminController controller = new StaffAdminController(staff, encoder);
+    private final SessionRegistry sessions = mock(SessionRegistry.class);
+    private final AuditService audit = mock(AuditService.class);
+    private final StaffAdminController controller = new StaffAdminController(staff, encoder, sessions, audit);
 
     @Test
     void administratorCanUpdateOrdinaryStaffNameAndStatus() {
@@ -27,6 +31,8 @@ class StaffAdminControllerTest {
         assertEquals("Updated Doctor", result.displayName());
         assertEquals(StaffRole.DOCTOR, result.role());
         assertFalse(result.enabled());
+        verify(audit).record("STAFF_ACCOUNT_DISABLED", "STAFF", 5L);
+        verify(sessions).getAllPrincipals();
     }
 
     @Test
@@ -40,7 +46,7 @@ class StaffAdminControllerTest {
     }
 
     @Test
-    void passwordResetStoresOnlyEncodedPassword() {
+    void passwordResetStoresOnlyEncodedPasswordAndRevokesSessions() {
         StaffAccount account = new StaffAccount("doctor.one", "Doctor One", "old-hash", StaffRole.DOCTOR);
         when(staff.findById(5L)).thenReturn(Optional.of(account));
         when(encoder.encode("a-long-temporary-password")).thenReturn("encoded-hash");
@@ -50,5 +56,7 @@ class StaffAdminControllerTest {
                 new StaffAdminController.ResetPasswordRequest("a-long-temporary-password"));
 
         assertEquals("encoded-hash", account.getPassword());
+        verify(audit).record("STAFF_PASSWORD_RESET", "STAFF", 5L);
+        verify(sessions).getAllPrincipals();
     }
 }
