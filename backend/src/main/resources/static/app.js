@@ -68,13 +68,13 @@ $("staff-form").onsubmit=async e=>{
 async function staffList(){
  try{
   const list=await api("/api/admin/staff");
-  $("staff-list").innerHTML=list.map(s=>'<form class="staff-card" data-staff-form="'+esc(s.id)+'"><div class="staff-card-top"><div><b>'+esc(s.displayName)+'</b><small>'+esc(s.username)+' · Created '+esc(String(s.createdAt||"").slice(0,10))+'</small></div><span class="status '+(s.enabled?"active":"inactive")+'">'+(s.enabled?"Active":"Disabled")+'</span></div><div class="staff-edit-grid"><label>Display name<input name="displayName" required minlength="2" maxlength="100" value="'+esc(s.displayName)+'"></label><label>Role<select name="role"><option value="DOCTOR" '+(s.role==="DOCTOR"?"selected":"")+'>Doctor</option><option value="RECEPTIONIST" '+(s.role==="RECEPTIONIST"?"selected":"")+'>Receptionist</option></select></label><label class="check-label"><input type="checkbox" name="enabled" '+(s.enabled?"checked":"")+'> Account enabled</label></div><div class="staff-actions"><button type="submit" class="small-button">Save staff changes</button><button type="button" class="secondary small-button" data-reset-staff="'+esc(s.id)+'">Reset password</button></div><div class="reset-box" id="reset-'+esc(s.id)+'" hidden><label>New temporary password<input type="password" minlength="14" maxlength="128" autocomplete="new-password"></label><button type="button" class="small-button" data-confirm-reset="'+esc(s.id)+'">Set temporary password</button></div></form>').join("")||'<p class="muted">No staff accounts found.</p>';
+  $("staff-list").innerHTML=list.map(s=>'<form class="staff-card" data-staff-form="'+esc(s.id)+'"><div class="staff-card-top"><div><b>'+esc(s.displayName)+'</b><small>'+esc(s.username)+' · '+esc(String(s.createdAt||"").slice(0,10))+'</small></div><span class="status '+(s.enabled?"active":"inactive")+'">'+(s.enabled?"Active":"Disabled")+'</span></div><div class="staff-edit-grid"><label>Display name<input name="displayName" required minlength="2" maxlength="100" value="'+esc(s.displayName)+'"></label><label>Role<input value="'+esc(s.role)+'" disabled></label><label class="check-label"><input type="checkbox" name="enabled" '+(s.enabled?"checked":"")+'> Account enabled</label></div><div class="staff-actions"><button type="submit" class="small-button">Save staff changes</button><button type="button" class="secondary small-button" data-reset-staff="'+esc(s.id)+'">Reset password</button></div><div class="reset-box" id="reset-'+esc(s.id)+'" hidden><label>New temporary password<input type="password" minlength="14" maxlength="128" autocomplete="new-password"></label><button type="button" class="small-button" data-confirm-reset="'+esc(s.id)+'">Set temporary password</button></div></form>').join("")||'<p class="muted">No staff accounts found.</p>';
  }catch(e){$("staff-message").textContent=e.message;}
 }
 $("load-staff").onclick=staffList;
 $("staff-list").addEventListener("submit",async e=>{
  const f=e.target.closest("[data-staff-form]");if(!f)return;e.preventDefault();
- const id=f.dataset.staffForm;const body={displayName:f.elements.displayName.value,role:f.elements.role.value,enabled:f.elements.enabled.checked};
+ const id=f.dataset.staffForm;const body={displayName:f.elements.displayName.value,enabled:f.elements.enabled.checked};
  try{await api("/api/admin/staff/"+encodeURIComponent(id),{method:"PUT",body:JSON.stringify(body)});$("staff-message").textContent="Staff details updated.";await staffList();}
  catch(err){$("staff-message").textContent=err.message;}
 });
@@ -85,7 +85,7 @@ $("staff-list").onclick=async e=>{
  if(confirmButton){
   const id=confirmButton.dataset.confirmReset;const input=$("reset-"+id).querySelector("input");const password=input.value;
   if(password.length<14){$("staff-message").textContent="Temporary password must be at least 14 characters.";return;}
-  try{await api("/api/admin/staff/"+encodeURIComponent(id)+"/reset-password",{method:"POST",body:JSON.stringify({temporaryPassword:password})});input.value="";$("staff-message").textContent="Temporary password reset. Deliver it securely."; $("reset-"+id).hidden=true;}
+  try{await api("/api/admin/staff/"+encodeURIComponent(id)+"/reset-password",{method:"POST",body:JSON.stringify({temporaryPassword:password})});input.value="";$("staff-message").textContent="Temporary password reset. Deliver it securely.";$("reset-"+id).hidden=true;}
   catch(err){$("staff-message").textContent=err.message;}
  }
 };
