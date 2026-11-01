@@ -34,7 +34,6 @@ public class StaffAdminController {
 
     public record UpdateStaffRequest(
             @NotBlank @Size(min = 2, max = 100) String displayName,
-            @NotNull StaffRole role,
             @NotNull Boolean enabled) {}
 
     public record ResetPasswordRequest(
@@ -72,11 +71,11 @@ public class StaffAdminController {
     @PutMapping("/{id}")
     public StaffView update(@PathVariable Long id, @Valid @RequestBody UpdateStaffRequest request) {
         StaffAccount account = getStaff(id);
-        if (account.getRole() == StaffRole.ADMIN || request.role() == StaffRole.ADMIN) {
+        if (account.getRole() == StaffRole.ADMIN) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Administrator role changes require a separately reviewed process.");
+                    "Administrator account changes require a separately reviewed process.");
         }
-        account.updateProfile(request.displayName(), request.role());
+        account.updateProfile(request.displayName(), account.getRole());
         account.setEnabled(request.enabled());
         return StaffView.from(staff.save(account));
     }
