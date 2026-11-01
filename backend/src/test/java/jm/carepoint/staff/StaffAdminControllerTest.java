@@ -16,26 +16,26 @@ class StaffAdminControllerTest {
     private final StaffAdminController controller = new StaffAdminController(staff, encoder);
 
     @Test
-    void administratorCanUpdateOrdinaryStaffProfileAndStatus() {
+    void administratorCanUpdateOrdinaryStaffNameAndStatus() {
         StaffAccount account = new StaffAccount("doctor.one", "Doctor One", "hash", StaffRole.DOCTOR);
         when(staff.findById(5L)).thenReturn(Optional.of(account));
         when(staff.save(any(StaffAccount.class))).thenAnswer(call -> call.getArgument(0));
 
         StaffAdminController.StaffView result = controller.update(5L,
-                new StaffAdminController.UpdateStaffRequest("Updated Doctor", StaffRole.RECEPTIONIST, false));
+                new StaffAdminController.UpdateStaffRequest("Updated Doctor", false));
 
         assertEquals("Updated Doctor", result.displayName());
-        assertEquals(StaffRole.RECEPTIONIST, result.role());
+        assertEquals(StaffRole.DOCTOR, result.role());
         assertFalse(result.enabled());
     }
 
     @Test
-    void ordinaryStaffCannotBePromotedToAdministrator() {
-        StaffAccount account = new StaffAccount("staff.one", "Staff One", "hash", StaffRole.DOCTOR);
+    void administratorAccountCannotBeEditedThroughOrdinaryStaffEndpoint() {
+        StaffAccount account = new StaffAccount("admin.one", "Admin One", "hash", StaffRole.ADMIN);
         when(staff.findById(5L)).thenReturn(Optional.of(account));
 
         assertThrows(ResponseStatusException.class, () -> controller.update(5L,
-                new StaffAdminController.UpdateStaffRequest("Staff One", StaffRole.ADMIN, true)));
+                new StaffAdminController.UpdateStaffRequest("Admin One", true)));
         verify(staff, never()).save(any(StaffAccount.class));
     }
 
