@@ -1,5 +1,6 @@
 package jm.carepoint.patient;
 
+import jm.carepoint.audit.AuditService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,7 +16,8 @@ import static org.mockito.Mockito.*;
 
 class PatientControllerTest {
     private final PatientRepository patients = mock(PatientRepository.class);
-    private final PatientController controller = new PatientController(patients);
+    private final AuditService audit = mock(AuditService.class);
+    private final PatientController controller = new PatientController(patients, audit);
 
     @AfterEach
     void clearSecurityContext() {
@@ -37,10 +39,11 @@ class PatientControllerTest {
                 "Jordan Sample", LocalDate.of(1990, 1, 1), "Fictional address", "555-0100"));
 
         assertInstanceOf(PatientController.ReceptionView.class, response);
+        verify(audit).record("PATIENT_CREATED", "PATIENT", null);
     }
 
     @Test
-    void doctorDetailIncludesClinicalFields() {
+    void doctorDetailIncludesClinicalFieldsAndCreatesAuditEvent() {
         authenticate("DOCTOR");
         PatientRecord patient = new PatientRecord(
                 "Jordan Sample", LocalDate.of(1990, 1, 1), "Fictional address", "555-0100");
@@ -53,5 +56,6 @@ class PatientControllerTest {
         PatientController.PatientView view = (PatientController.PatientView) response;
         assertEquals("Fictional clinical note", view.clinicalNotes());
         assertEquals("Fictional prescription", view.prescriptionNotes());
+        verify(audit).record("PATIENT_RECORD_VIEW", "PATIENT", 1L);
     }
 }

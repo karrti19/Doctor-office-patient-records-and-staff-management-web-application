@@ -65,6 +65,12 @@ $("staff-form").onsubmit=async e=>{
  try{await api("/api/admin/staff",{method:"POST",body:JSON.stringify(body)});$("staff-message").textContent="Staff account created. Deliver the temporary password securely.";e.currentTarget.reset();await staffList();}
  catch(err){$("staff-message").textContent=err.message;}
 };
+async function auditList(){
+ try{
+  const rows=await api("/api/admin/audit");
+  $("audit-list").innerHTML=rows.map(a=>'<div class="audit-row"><div><b>'+esc(a.action)+'</b><small>'+esc(a.actorUsername)+' · '+esc(a.targetType)+(a.targetId?' #'+esc(a.targetId):'')+'</small></div><time>'+esc(String(a.createdAt||"").replace("T"," ").slice(0,19))+'</time></div>').join("")||'<p class="muted">No audit events recorded yet.</p>';
+ }catch(e){$("audit-list").textContent=e.message;}
+}
 async function staffList(){
  try{
   const list=await api("/api/admin/staff");
@@ -72,6 +78,7 @@ async function staffList(){
  }catch(e){$("staff-message").textContent=e.message;}
 }
 $("load-staff").onclick=staffList;
+$("load-audit").onclick=auditList;
 $("staff-list").addEventListener("submit",async e=>{
  const f=e.target.closest("[data-staff-form]");if(!f)return;e.preventDefault();
  const id=f.dataset.staffForm;const body={displayName:f.elements.displayName.value,enabled:f.elements.enabled.checked};
@@ -99,7 +106,7 @@ async function start(){
   $("clinical-editor").hidden=!canReadClinical;
   $("staff-panel").hidden=currentRole!=="ADMIN";
   await load();
-  if(currentRole==="ADMIN")await staffList();
+  if(currentRole==="ADMIN"){await staffList();await auditList();}
  }catch(e){msg(e.message||"Sign in to use CarePoint.");}
 }
 start();

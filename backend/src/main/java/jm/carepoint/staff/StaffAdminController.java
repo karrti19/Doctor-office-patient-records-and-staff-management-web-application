@@ -1,5 +1,6 @@
 package jm.carepoint.staff;
 
+import jm.carepoint.audit.AuditService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -7,6 +8,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,10 +24,15 @@ import java.util.List;
 public class StaffAdminController {
     private final StaffRepository staff;
     private final PasswordEncoder encoder;
+    private final SessionRegistry sessionRegistry;
+    private final AuditService audit;
 
-    public StaffAdminController(StaffRepository staff, PasswordEncoder encoder) {
+    public StaffAdminController(StaffRepository staff, PasswordEncoder encoder,
+                                SessionRegistry sessionRegistry, AuditService audit) {
         this.staff = staff;
         this.encoder = encoder;
+        this.sessionRegistry = sessionRegistry;
+        this.audit = audit;
     }
 
     public record CreateStaffRequest(
@@ -49,6 +58,7 @@ public class StaffAdminController {
 
     @GetMapping
     public List<StaffView> list() {
+        audit.record("STAFF_DIRECTORY_VIEW", "STAFF", null);
         return staff.findAll().stream().map(StaffView::from).toList();
     }
 
@@ -65,7 +75,9 @@ public class StaffAdminController {
         }
         StaffAccount created = new StaffAccount(username, request.displayName(),
                 encoder.encode(request.temporaryPassword()), request.role());
-        return StaffView.from(staff.save(created));
+        StaffAccount saved = staff.save(created);
+        audit.record("STAFF_ACCOUNT_CREATED", "STAFF", saved.getId());
+        return StaffView.from(saved);
     }
 
     @PutMapping("/{id}")
@@ -77,7 +89,12 @@ public class StaffAdminController {
         }
         account.updateProfile(request.displayName(), account.getRole());
         account.setEnabled(request.enabled());
-        return StaffView.from(staff.save(account));
+        StaffAccount saved = staff.save(account);
+        audit.record(request.enabled() ? "STAFF_PROFILE_UPDATED" : "STAFF_ACCOUNT_DISABLED", "STAFF", id);
+        if (!request.enabled()) {
+            expireSessions(account.getUsername());
+        }
+        return StaffView.from(saved);
     }
 
     @PostMapping("/{id}/reset-password")
@@ -90,6 +107,8 @@ public class StaffAdminController {
         }
         account.updatePassword(encoder.encode(request.temporaryPassword()));
         staff.save(account);
+        audit.record("STAFF_PASSWORD_RESET", "STAFF", id);
+        expireSessions(account.getUsername());
     }
 
     @PostMapping("/{id}/deactivate")
@@ -102,6 +121,16 @@ public class StaffAdminController {
         }
         account.deactivate();
         staff.save(account);
+        audit.record("STAFF_ACCOUNT_DEACTIVATED", "STAFF", id);
+        expireSessions(account.getUsername());
+    }
+
+    private void expireSessions(String username) {
+        sessionRegistry.getAllPrincipals().stream()
+                .filter(principal -> principal instanceof UserDetails user
+                        && user.getUsername().equalsIgnoreCase(username))
+                .flatMap(principal -> sessionRegistry.getAllSessions(principal, false).stream())
+                .forEach(SessionInformation::expireNow);
     }
 
     private StaffAccount getStaff(Long id) {
